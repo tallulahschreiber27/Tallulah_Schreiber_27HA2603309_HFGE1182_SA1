@@ -279,6 +279,37 @@ public class ShootHandler : MonoBehaviour
         isPunching = false;
     }
 
+    // =================================================================
+    // --- ADDED REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
+    // =================================================================
+
+    public int GetCurrentAmmo()
+    {
+        return currentAmmo;
+    }
+
+    public int GetCurrentAmmoCount()
+    {
+        return currentAmmo;
+    }
+
+    public int GetTotalAmmo()
+    {
+        return totalAmmo;
+    }
+
+    public void SetCurrentAmmo(int ammoValue)
+    {
+        currentAmmo = ammoValue;
+        CheckWeaponAndUIState();
+    }
+
+    public void SetTotalAmmo(int ammoValue)
+    {
+        totalAmmo = ammoValue;
+        CheckWeaponAndUIState();
+    }
+
     private void OnDrawGizmos()
     {
         if (punchHitBox != null)
@@ -288,18 +319,11 @@ public class ShootHandler : MonoBehaviour
             Gizmos.matrix = punchHitBox.transform.localToWorldMatrix;
 
             BoxCollider boxCol = punchHitBox.GetComponent<BoxCollider>();
-            if (boxCol != null) Gizmos.DrawWireCube(boxCol.center, boxCol.size);
-            else Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
-
+            if (boxCol != null)
+            {
+                Gizmos.DrawWireCube(boxCol.center, boxCol.size);
+            }
             Gizmos.matrix = originalMatrix;
         }
-    }
-
-    /// <summary>
-    /// Public helper function that allows external scripts to safely check the loaded arrow count.
-    /// </summary>
-    public int GetCurrentAmmoCount()
-    {
-        return currentAmmo;
     }
 }

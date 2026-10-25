@@ -100,7 +100,6 @@ public class HealthHandler : MonoBehaviour
     {
         if (healthSlider != null)
         {
-
             healthSlider.value = Mathf.Clamp01(health / healthMax);
         }
     }
@@ -108,7 +107,6 @@ public class HealthHandler : MonoBehaviour
     public void DamageHandler(string damageTag, float damageAmount)
     {
         if (isDead) return;
-
 
         if (damageTag == "Arrow" || damageTag == "Enemy" || (damageTags != null && damageTags.Contains(damageTag)))
         {
@@ -169,10 +167,8 @@ public class HealthHandler : MonoBehaviour
 
         Debug.Log($"[{gameObject.name}] has died.");
 
-        
         AnimalAI aiScript = GetComponent<AnimalAI>();
         if (aiScript != null) aiScript.Die();
-        
 
         if (canvasTransform != null)
         {
@@ -186,6 +182,31 @@ public class HealthHandler : MonoBehaviour
         else
         {
             gameObject.SetActive(false);
+        }
+    }
+
+    // =================================================================
+    // --- ADDED REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
+    // =================================================================
+
+    public float GetMaxHealth()
+    {
+        return healthMax;
+    }
+
+    public float GetHealth()
+    {
+        return health;
+    }
+
+    public void SetHealth(float healthValue)
+    {
+        health = Mathf.Clamp(healthValue, 0f, healthMax);
+        UpdateHealthBarUI();
+
+        if (health <= 0)
+        {
+            DeathHandler();
         }
     }
 }
