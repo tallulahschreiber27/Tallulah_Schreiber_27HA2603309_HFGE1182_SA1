@@ -1,42 +1,82 @@
-using System;
 using UnityEngine;
-using UnityEngine.Audio;
 
 public class SoundManager : MonoBehaviour
 {
-    public Sound[] soundList;
-    public static SoundManager Instance;
+    // Static instance allows other scripts to access this easily
+    public static SoundManager Instance { get; private set; }
+
+    [Header("--- Audio Sources ---")]
+    [SerializeField] private AudioSource musicSource;
+    [SerializeField] private AudioSource sfxSource;
+
+    [Header("--- Audio Clips ---")]
+    public AudioClip backgroundMusic;
+    public AudioClip arrowShoot;
+    public AudioClip playerWalk;
+    public AudioClip enemyAttack;
+    public AudioClip hitEffect;
 
     private void Awake()
     {
+        // Enforce a Single Instance (Singleton)
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject); // Keep music playing across scenes
         }
-        
-        foreach (Sound s in soundList)
+        else
         {
-            s.source = gameObject.AddComponent<AudioSource>();
-            s.source.clip = s.clip;
-            if (s.mixer != null)
-            {
-                s.source.outputAudioMixerGroup = s.mixer;
-            }
-            s.source.volume = s.volume;
-            s.source.pitch = s.pitch;
-            s.source.loop = s.loop;
+            Destroy(gameObject);
         }
     }
 
+    private void Start()
+    {
+        // Start background music automatically
+        PlayMusic(backgroundMusic);
+    }
+
+    // Call this for one-shot sound effects
+    public void PlaySFX(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            sfxSource.PlayOneShot(clip);
+        }
+    }
+
+    // Call this to change or start background music
+    public void PlayMusic(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            musicSource.clip = clip;
+            musicSource.loop = true;
+            musicSource.Play();
+        }
+    }
+
+    // Main text-string play handler to cleanly match your other script calls
     public void Play(string name)
     {
-        
-        Sound s = Array.Find(soundList, sound => sound.name == name);
-        if (s == null)
+        switch (name.ToLower())
         {
-            Debug.LogWarning("Sound Not Found: " + name);
-            return;
+            case "shoot":
+                PlaySFX(arrowShoot);
+                break;
+            case "walk":
+                PlaySFX(playerWalk);
+                break;
+            case "enemyattack":
+            case "enemy":
+                PlaySFX(enemyAttack);
+                break;
+            case "hit":
+                PlaySFX(hitEffect);
+                break;
+            default:
+                Debug.LogWarning($"[Sound] Clip name string '{name}' not recognized!");
+                break;
         }
-        s.source.Play();
     }
 }

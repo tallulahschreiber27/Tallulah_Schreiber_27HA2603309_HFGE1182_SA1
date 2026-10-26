@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("ANIMATION PARAMETERS")]
     private Animator anim;
-    private ShootHandler shootHandler; 
+    private ShootHandler shootHandler;
 
     [Header("MOVEMENT PARAMETERS")]
     public float walkSpeed;
@@ -38,6 +38,11 @@ public class PlayerController : MonoBehaviour
     public float groundCheckDistance;
     public LayerMask groundLayer;
 
+    [Header("AUDIO FEEDBACK")]
+    [Tooltip("Time between footstep audio clips while walking/running.")]
+    [SerializeField] private float stepRate = 0.5f;
+    private float stepTimer;
+
     private Pickup currentPickupInRange = null;
 
     #region BostonCity Campus
@@ -51,7 +56,7 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
-        shootHandler = GetComponent<ShootHandler>(); 
+        shootHandler = GetComponent<ShootHandler>();
 
         InputAction = new PlayerInputActions();
     }
@@ -140,7 +145,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     public void AddAmmunition(int amount)
     {
         if (shootHandler != null)
@@ -194,6 +198,27 @@ public class PlayerController : MonoBehaviour
         currentVelocity.z = targetVelocity.z;
 
         rb.linearVelocity = currentVelocity;
+
+        // --- FOOTSTEP AUDIO INTEGRATION FOR SECTION B ---
+        if (isGrounded && moveDirection.magnitude > 0.1f)
+        {
+            // Speed up footsteps if sprinting
+            float currentRate = isSprinting ? (stepRate * 0.6f) : stepRate;
+
+            stepTimer += Time.deltaTime;
+            if (stepTimer >= currentRate)
+            {
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.Play("Walk");
+                }
+                stepTimer = 0f;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
     }
 
     public void OnSprint(InputAction.CallbackContext context)
@@ -219,6 +244,11 @@ public class PlayerController : MonoBehaviour
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
             if (anim != null) anim.SetTrigger("JumpTrigger");
+
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.Play("Jump");
+            }
         }
     }
 
@@ -228,7 +258,7 @@ public class PlayerController : MonoBehaviour
         hitbox.height = Mathf.Lerp(hitbox.height, targetHeight, 0.2f);
 
         Vector3 camLocalPos = playerCamera.transform.localPosition;
-        camLocalPos.y = Mathf.Lerp(camLocalPos.y, targetHeight - 0.25f, Time.deltaTime * .2f);
+        camLocalPos.y = Mathf.Lerp(camLocalPos.y, targetHeight - 0.25f, Time.deltaTime * 5f);
         hitbox.height = targetHeight;
         playerCamera.transform.localPosition = camLocalPos;
     }
