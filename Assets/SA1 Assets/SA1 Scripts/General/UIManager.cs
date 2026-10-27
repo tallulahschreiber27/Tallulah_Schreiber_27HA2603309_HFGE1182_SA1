@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; // <-- ADDED TO HANDLE SCENE TRANSITIONS
+
 public class UIManager : MonoBehaviour
 {
     public GameObject hud;
@@ -11,14 +13,14 @@ public class UIManager : MonoBehaviour
 
     public Slider sldHealth;
     public HealthHandler healthHandler;
-    
+
     public static UIManager Instance { get; private set; }
 
     public bool IsPaused { get; private set; }
 
     private void Awake()
     {
-        // Singleton pattern (optional but useful)
+        // Singleton pattern
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -45,7 +47,7 @@ public class UIManager : MonoBehaviour
         UpdateHealthUI();
         UpdateAmmoUI();
     }
-    
+
     public void UpdateHealthUI()
     {
         if (healthHandler == null || sldHealth == null)
@@ -67,7 +69,6 @@ public class UIManager : MonoBehaviour
     public void PauseGame()
     {
         IsPaused = true;
-
         Time.timeScale = 0f;
 
         if (pauseMenu != null)
@@ -83,7 +84,6 @@ public class UIManager : MonoBehaviour
     public void ResumeGame()
     {
         IsPaused = false;
-
         Time.timeScale = 1f;
 
         if (pauseMenu != null)
@@ -96,15 +96,34 @@ public class UIManager : MonoBehaviour
         Cursor.visible = false;
     }
 
+    // =================================================================
+    // --- ADDED NAVIGATION METHODS FOR PAUSE MENU & MAIN MENU ---
+    // =================================================================
+
+    /// <summary>
+    /// Call this from your Pause Menu's "Main Menu" button.
+    /// </summary>
+    public void GoToMainMenu()
+    {
+        Time.timeScale = 1f; // Unfreeze time before loading, or the menu will be frozen!
+        SceneManager.LoadScene("MainMenu"); // Make sure your main menu scene is named exactly this!
+    }
+
+    /// <summary>
+    /// Call this from your Main Menu's "Start Game" button.
+    /// </summary>
+    public void PlayGame()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Level1"); // Make sure your first gameplay level scene is named exactly this!
+    }
+
     public void QuitGame()
     {
-      
         Application.Quit();
 
 #if UNITY_EDITOR
-        
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
 }
-
