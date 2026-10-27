@@ -12,9 +12,15 @@ public class SoundManager : MonoBehaviour
     [Header("--- Audio Clips ---")]
     public AudioClip backgroundMusic;
     public AudioClip arrowShoot;
+    public AudioClip arrowMidAir;
     public AudioClip playerWalk;
     public AudioClip enemyAttack;
     public AudioClip hitEffect;
+
+    [Header("--- HEALTH & COMBAT AUDIO ---")]
+    public AudioClip playerHurt;
+    public AudioClip playerDeath;
+    public AudioClip enemyDeath;
 
     private void Awake()
     {
@@ -63,6 +69,7 @@ public class SoundManager : MonoBehaviour
         {
             case "shoot":
                 PlaySFX(arrowShoot);
+                StartCoroutine(PlayDelayedMidAirSound());
                 break;
             case "walk":
                 PlaySFX(playerWalk);
@@ -74,9 +81,28 @@ public class SoundManager : MonoBehaviour
             case "hit":
                 PlaySFX(hitEffect);
                 break;
+            case "playerhurt":
+                PlaySFX(playerHurt);
+                break;
+            case "playerdeath":
+                PlaySFX(playerDeath);
+                break;
+            case "enemydeath":
+                PlaySFX(enemyDeath);
+                break;
             default:
                 Debug.LogWarning($"[Sound] Clip name string '{name}' not recognized!");
                 break;
+        }
+    }
+
+    // Coroutine sequence to handle the brief delayed flying arrow audio
+    private System.Collections.IEnumerator PlayDelayedMidAirSound()
+    {
+        yield return new WaitForSeconds(0.15f);
+        if (arrowMidAir != null)
+        {
+            PlaySFX(arrowMidAir);
         }
     }
 }

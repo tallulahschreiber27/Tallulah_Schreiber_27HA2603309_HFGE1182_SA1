@@ -138,6 +138,19 @@ public class HealthHandler : MonoBehaviour
 
         UpdateHealthBarUI();
 
+        // --- AUDIO FEEDBACK: DAMAGE TAKEN ---
+        if (SoundManager.Instance != null && health > 0)
+        {
+            if (gameObject.CompareTag("Player"))
+            {
+                SoundManager.Instance.Play("playerhurt");
+            }
+            else if (gameObject.CompareTag("Enemy"))
+            {
+                SoundManager.Instance.Play("hit");
+            }
+        }
+
         if (health <= 0)
         {
             DeathHandler();
@@ -167,6 +180,19 @@ public class HealthHandler : MonoBehaviour
 
         Debug.Log($"[{gameObject.name}] has died.");
 
+        // --- AUDIO FEEDBACK: CHARACTER DEATH ---
+        if (SoundManager.Instance != null)
+        {
+            if (gameObject.CompareTag("Player"))
+            {
+                SoundManager.Instance.Play("playerdeath");
+            }
+            else
+            {
+                SoundManager.Instance.Play("enemydeath");
+            }
+        }
+
         AnimalAI aiScript = GetComponent<AnimalAI>();
         if (aiScript != null) aiScript.Die();
 
@@ -186,7 +212,7 @@ public class HealthHandler : MonoBehaviour
     }
 
     // =================================================================
-    // --- ADDED REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
+    // --- REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
     // =================================================================
 
     public float GetMaxHealth()

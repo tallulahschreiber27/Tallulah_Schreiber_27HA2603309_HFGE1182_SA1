@@ -157,6 +157,12 @@ public class ShootHandler : MonoBehaviour
         currentAmmo--;
         CheckWeaponAndUIState();
 
+        // --- SECTION B: AUDIO FEEDBACK FOR SHOOTING ---
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.Play("shoot");
+        }
+
         if (projectilePrefab != null && projectileSpawn != null)
         {
             GameObject projectile = Instantiate(projectilePrefab, projectileSpawn.position, projectileSpawn.rotation);
@@ -200,6 +206,12 @@ public class ShootHandler : MonoBehaviour
         {
             currentAmmo += totalAmmo;
             totalAmmo = 0;
+        }
+
+        // --- SECTION B: AUDIO FEEDBACK FOR BOW RELOAD/RESET ---
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.Play("hit"); // Triggers mechanical reload sound click
         }
 
         Debug.Log($"[RELOAD SUCCESS] Clip: {currentAmmo} | Reserves Remaining: {totalAmmo}");
@@ -269,6 +281,12 @@ public class ShootHandler : MonoBehaviour
                 if (targetHealth != null)
                 {
                     targetHealth.DamageHandler(punchDamage);
+
+                    // --- SECTION B: AUDIO FEEDBACK FOR HIT IMPACT ---
+                    if (SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.Play("hit");
+                    }
                 }
             }
         }
@@ -280,7 +298,7 @@ public class ShootHandler : MonoBehaviour
     }
 
     // =================================================================
-    // --- ADDED REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
+    // --- REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
     // =================================================================
 
     public int GetCurrentAmmo()
