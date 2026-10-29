@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // <-- ADDED TO HANDLE SCENE TRANSITIONS
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -97,8 +97,37 @@ public class UIManager : MonoBehaviour
     }
 
     // =================================================================
-    // --- ADDED NAVIGATION METHODS FOR PAUSE MENU & MAIN MENU ---
+    // --- NAVIGATION METHODS FOR PAUSE MENU & MAIN MENU ---
     // =================================================================
+
+    /// <summary>
+    /// Dynamically tracks down the surviving GameManager instance to pass along the file load request safely.
+    /// Connect this method directly to your Main Menu "Load Game" Button OnClick() event handler!
+    /// </summary>
+    public void HandleLoadButtonPressed()
+    {
+        // Dynamically locate the surviving GameManager instance across scene reloads
+        GameManager activeManager = FindObjectOfType<GameManager>();
+
+        if (activeManager != null)
+        {
+            Debug.Log("[UI MANAGER] Successfully located active GameManager. Triggering loading routine...");
+            activeManager.OnClickLoadFromMenu();
+        }
+        else
+        {
+            // Fallback to checking the static instance handle
+            if (GameManager.Instance != null)
+            {
+                Debug.Log("[UI MANAGER] Located GameManager via static Instance wrapper. Triggering loading routine...");
+                GameManager.Instance.OnClickLoadFromMenu();
+            }
+            else
+            {
+                Debug.LogError("[UI MANAGER] CRITICAL: No active GameManager discovered in this scene scene context to link save files!");
+            }
+        }
+    }
 
     /// <summary>
     /// Call this from your Pause Menu's "Main Menu" button.
