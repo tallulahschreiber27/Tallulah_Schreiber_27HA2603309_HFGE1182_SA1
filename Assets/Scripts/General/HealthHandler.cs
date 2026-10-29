@@ -193,6 +193,13 @@ public class HealthHandler : MonoBehaviour
             }
         }
 
+        // CONNECTED TO GAMEMANAGER TRANSITIONS 
+        // Check if this specific dead object is tagged as an Enemy, then alert the GameManager
+        if (gameObject.CompareTag("Enemy") && GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckLevelStatus();
+        }
+
         AnimalAI aiScript = GetComponent<AnimalAI>();
         if (aiScript != null) aiScript.Die();
 
