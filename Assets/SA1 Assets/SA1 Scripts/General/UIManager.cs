@@ -33,6 +33,7 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         ResumeGame();
+        UpdateUI(); // Force a fresh UI draw on start
     }
 
     private void Update()
@@ -44,6 +45,17 @@ public class UIManager : MonoBehaviour
             else
                 PauseGame();
         }
+
+        // Continually refresh UI status in update loop
+        UpdateHealthUI();
+        UpdateAmmoUI();
+    }
+
+    /// <summary>
+    /// Added to match the GameManager's cross-scene loading refresh call perfectly!
+    /// </summary>
+    public void UpdateUI()
+    {
         UpdateHealthUI();
         UpdateAmmoUI();
     }
@@ -57,13 +69,13 @@ public class UIManager : MonoBehaviour
         sldHealth.value = healthHandler.GetHealth();
     }
 
-    private void UpdateAmmoUI()
+    public void UpdateAmmoUI()
     {
         if (shootHandler == null || txtAmmo == null)
             return;
 
-        txtAmmo.text =
-            $"{shootHandler.GetCurrentAmmo()} / {shootHandler.GetTotalAmmo()}";
+        // Calls the secure getters inside your ShootHandler script
+        txtAmmo.text = $"{shootHandler.GetCurrentAmmo()} / {shootHandler.GetTotalAmmo()}";
     }
 
     public void PauseGame()
@@ -101,12 +113,10 @@ public class UIManager : MonoBehaviour
     // =================================================================
 
     /// <summary>
-    /// Dynamically tracks down the surviving GameManager instance to pass along the file load request safely.
     /// Connect this method directly to your Main Menu "Load Game" Button OnClick() event handler!
     /// </summary>
     public void HandleLoadButtonPressed()
     {
-        // Dynamically locate the surviving GameManager instance across scene reloads
         GameManager activeManager = FindObjectOfType<GameManager>();
 
         if (activeManager != null)
@@ -116,7 +126,6 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            // Fallback to checking the static instance handle
             if (GameManager.Instance != null)
             {
                 Debug.Log("[UI MANAGER] Located GameManager via static Instance wrapper. Triggering loading routine...");
@@ -124,27 +133,21 @@ public class UIManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("[UI MANAGER] CRITICAL: No active GameManager discovered in this scene scene context to link save files!");
+                Debug.LogError("[UI MANAGER] CRITICAL: No active GameManager discovered to link save files!");
             }
         }
     }
 
-    /// <summary>
-    /// Call this from your Pause Menu's "Main Menu" button.
-    /// </summary>
     public void GoToMainMenu()
     {
-        Time.timeScale = 1f; // Unfreeze time before loading, or the menu will be frozen!
-        SceneManager.LoadScene("MainMenu"); // Make sure your main menu scene is named exactly this!
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
     }
 
-    /// <summary>
-    /// Call this from your Main Menu's "Start Game" button.
-    /// </summary>
     public void PlayGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Level1"); // Make sure your first gameplay level scene is named exactly this!
+        SceneManager.LoadScene("Level1");
     }
 
     public void QuitGame()

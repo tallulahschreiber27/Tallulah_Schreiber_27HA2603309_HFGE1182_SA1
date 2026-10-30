@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class ShootHandler : MonoBehaviour
@@ -69,6 +70,28 @@ public class ShootHandler : MonoBehaviour
 
     private void Update()
     {
+        // MASTER LOCK 1: If game clock is frozen or UIManager states it's paused, freeze all combat inputs instantly
+        if (Time.timeScale == 0f || (UIManager.Instance != null && UIManager.Instance.IsPaused))
+        {
+            if (isCharging)
+            {
+                isCharging = false;
+                chargeTime = 0f;
+            }
+            return; // Aborts the update cycle entirely before checking hardware mouse states
+        }
+
+        // MASTER LOCK 2: Safety Gate for active UI element hover clicking
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            if (isCharging)
+            {
+                isCharging = false;
+                chargeTime = 0f;
+            }
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0) && !isCharging && !isPunching)
         {
             if (currentAmmo > 0)
@@ -250,6 +273,15 @@ public class ShootHandler : MonoBehaviour
         cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, Time.deltaTime * 10f);
     }
 
+    // =================================================================
+    // --- INTEGRATION INTERFACE DATA GETTERS AND SETTERS ---
+    // =================================================================
+
+    public int GetCurrentAmmo() { return currentAmmo; }
+    public int GetTotalAmmo() { return totalAmmo; }
+    public void SetCurrentAmmo(int amount) { currentAmmo = amount; CheckWeaponAndUIState(); }
+    public void SetTotalAmmo(int amount) { totalAmmo = amount; CheckWeaponAndUIState(); }
+
     public IEnumerator PunchObject()
     {
         isPunching = true;
@@ -282,7 +314,7 @@ public class ShootHandler : MonoBehaviour
                 {
                     targetHealth.DamageHandler(punchDamage);
 
-                    // --- SECTION B: AUDIO FEEDBACK FOR HIT IMPACT ---
+                    // --- SECTION B: AUDIO FEEDBACK FOR HIT ---
                     if (SoundManager.Instance != null)
                     {
                         SoundManager.Instance.Play("hit");
@@ -291,57 +323,8 @@ public class ShootHandler : MonoBehaviour
             }
         }
 
-        yield return new WaitForSecondsRealtime(0.3f);
-
+        yield return new WaitForSeconds(0.4f);
         if (punchHitBox != null) punchHitBox.SetActive(false);
         isPunching = false;
-    }
-
-    // =================================================================
-    // --- REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
-    // =================================================================
-
-    public int GetCurrentAmmo()
-    {
-        return currentAmmo;
-    }
-
-    public int GetCurrentAmmoCount()
-    {
-        return currentAmmo;
-    }
-
-    public int GetTotalAmmo()
-    {
-        return totalAmmo;
-    }
-
-    public void SetCurrentAmmo(int ammoValue)
-    {
-        currentAmmo = ammoValue;
-        CheckWeaponAndUIState();
-    }
-
-    public void SetTotalAmmo(int ammoValue)
-    {
-        totalAmmo = ammoValue;
-        CheckWeaponAndUIState();
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (punchHitBox != null)
-        {
-            Gizmos.color = Color.red;
-            Matrix4x4 originalMatrix = Gizmos.matrix;
-            Gizmos.matrix = punchHitBox.transform.localToWorldMatrix;
-
-            BoxCollider boxCol = punchHitBox.GetComponent<BoxCollider>();
-            if (boxCol != null)
-            {
-                Gizmos.DrawWireCube(boxCol.center, boxCol.size);
-            }
-            Gizmos.matrix = originalMatrix;
-        }
     }
 }

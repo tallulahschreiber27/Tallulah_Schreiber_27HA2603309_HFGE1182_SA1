@@ -140,7 +140,8 @@ public class PlayerController : MonoBehaviour
 
         if (shootHandler != null)
         {
-            float ammoWeight = (shootHandler.GetCurrentAmmoCount() > 0) ? 1f : 0f;
+            // FIXED: Modified from GetCurrentAmmoCount() to match your live ShootHandler interface method
+            float ammoWeight = (shootHandler.GetCurrentAmmo() > 0) ? 1f : 0f;
             anim.SetFloat("hasAmmo", ammoWeight);
         }
     }
