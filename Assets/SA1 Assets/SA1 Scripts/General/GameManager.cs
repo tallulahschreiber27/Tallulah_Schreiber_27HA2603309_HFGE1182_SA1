@@ -7,21 +7,15 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
     public GameObject playerObject;
     public GameObject[] enemies;
-    private string sceneName;
 
     [Header("SCENE MANAGEMENT")]
-    [Tooltip("Type the exact name of your first level scene here.")]
-    public string level1Name = "Level 1";
-
-    [Tooltip("Type the exact name of your second level scene here.")]
-    public string level2Name = "Level 2";
-
-    [Tooltip("Type the exact name of your final credits scene here.")]
+    public string mainMenuName = "MainMenu";
+    public string level1Name = "Level1";
+    public string level2Name = "Level2";
     public string creditsSceneName = "Credits";
 
     private void Awake()
     {
-        // Singleton pattern to ensure the manager survives across scene updates
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -29,28 +23,90 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject); // Keeps the GameManager alive between scenes so it can run the loading sequence
+        DontDestroyOnLoad(gameObject);
+
+        SceneManager.sceneLoaded += HandleGlobalSceneSetup;
+    }
+
+    private void HandleGlobalSceneSetup(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log($"[GAMEMANAGER] Scene Loaded: {scene.name}");
+
+        if (scene.name.StartsWith("Level") || scene.name.Contains("Level"))
+        {
+            playerObject = GameObject.FindWithTag("Player");
+            enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            Debug.Log($"[GAMEMANAGER] References gathered. Player found: {playerObject != null}, Enemies found: {enemies?.Length}");
+
+            // Auto-bind Main Menu / Exit Button inside gameplay levels
+            GameObject pauseMenuBtnObj = GameObject.Find("MainMenuBtn");
+
+            if (pauseMenuBtnObj != null)
+            {
+                UnityEngine.UI.Button btn = pauseMenuBtnObj.GetComponent<UnityEngine.UI.Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(SavePlayer);
+                    btn.onClick.AddListener(SaveEnemies);
+                    btn.onClick.AddListener(() => {
+                        Debug.Log("[GAMEMANAGER] Leaving level. Loading Main Menu scene...");
+                        SceneManager.LoadScene(mainMenuName);
+                    });
+                    Debug.Log("[GAMEMANAGER] Successfully auto-bound the Pause Menu 'Main Menu' button code-side!");
+                }
+            }
+            return;
+        }
+
+        if (scene.name == mainMenuName)
+        {
+            GameObject loadButtonObj = GameObject.Find("LoadGamebtn");
+
+            if (loadButtonObj != null)
+            {
+                UnityEngine.UI.Button btn = loadButtonObj.GetComponent<UnityEngine.UI.Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(OnClickLoadFromMenu);
+                    Debug.Log("[GAMEMANAGER] Successfully auto-bound the LoadGamebtn code-side!");
+                }
+            }
+        }
     }
 
     public void SavePlayer()
     {
-        SaveSystem.SavePlayer(playerObject.GetComponent<ShootHandler>(), playerObject.GetComponent<HealthHandler>());
+        if (playerObject != null)
+        {
+            SaveSystem.SavePlayer(playerObject.GetComponent<ShootHandler>(), playerObject.GetComponent<HealthHandler>());
+            Debug.Log("[GAMEMANAGER] Player data saved.");
+        }
     }
 
     public void SaveEnemies()
     {
-        SaveSystem.SaveEnemy(enemies);
+        if (enemies != null && enemies.Length > 0)
+        {
+            SaveSystem.SaveEnemy(enemies);
+            Debug.Log("[GAMEMANAGER] Enemy data saved.");
+        }
     }
 
     public void LoadPlayer()
     {
         PlayerData data = SaveSystem.LoadPlayer();
-        playerObject.GetComponent<ShootHandler>().SetCurrentAmmo(data.currentAmmo);
-        playerObject.GetComponent<ShootHandler>().SetTotalAmmo(data.totalAmmo);
-        playerObject.GetComponent<HealthHandler>().SetHealth(data.health);
+        if (data != null && playerObject != null)
+        {
+            playerObject.GetComponent<ShootHandler>().SetCurrentAmmo(data.currentAmmo);
+            playerObject.GetComponent<ShootHandler>().SetTotalAmmo(data.totalAmmo);
+            playerObject.GetComponent<HealthHandler>().SetHealth(data.health);
 
-        // Restored vector array indexes completely
-        playerObject.transform.position = new Vector3(data.position[0], data.position[1], data.position[2]);
+            // Restored full position array index pointers safely
+            playerObject.transform.position = new Vector3(data.position[0], data.position[1], data.position[2]);
+            Debug.Log("[GAMEMANAGER] Player stats and position successfully applied.");
+        }
     }
 
     public void LoadEnemies()
@@ -60,165 +116,124 @@ public class GameManager : MonoBehaviour
         {
             EnemySaveData data = SaveSystem.LoadEnemy();
 
-            // Safety check: Make sure data exists before indexing into it
-            if (data != null && data.enemies != null && enemy != null)
+            if (data != null && data.enemies != null && enemy != null && i < data.enemies.Count)
             {
                 enemy.SetActive(data.enemies[i].activeInScene);
                 enemy.GetComponent<HealthHandler>().SetHealth(data.enemies[i].health);
 
-                // Restored your exact array indexes for enemy positions
+                // Restored full enemy position array index pointers safely
                 enemy.transform.position = new Vector3(data.enemies[i].position[0], data.enemies[i].position[1], data.enemies[i].position[2]);
             }
             i++;
         }
+        Debug.Log("[GAMEMANAGER] Enemy array status and positions applied.");
     }
 
-
-    // =================================================================
-    // --- ADVANCED CROSS-SCENE LOADING SYSTEM (SECTION B & C) ---
-    // =================================================================
-
-    /// <summary>
-    /// Connect this method directly to your Main Menu "Load Button" OnClick() event!
-    /// </summary>
     public void OnClickLoadFromMenu()
     {
-        Debug.Log("[GAMEMANAGER] Load button clicked.");
+        Debug.Log("[GAMEMANAGER] Load button was physically clicked!");
 
-        // Section C Safety Check: Verify if the save file path actually exists on the disk first
-        string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "player.json"); // Match your exact file name
+        // FIXED: Now looking for the correct binary file path matching your SaveSystem!
+        string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
+        Debug.Log($"[GAMEMANAGER] Looking for save file at: {playerSavePath}");
 
         if (!System.IO.File.Exists(playerSavePath))
         {
-            Debug.LogWarning("[GAMEMANAGER] Aborting Load: No physical save file exists on disk yet!");
-            // Optional: Trigger a UI popup here saying "No save game found!"
+            Debug.LogError("[GAMEMANAGER] Aborting Load: No save file found on disk!");
             return;
         }
 
         PlayerData data = SaveSystem.LoadPlayer();
-
         if (data != null)
         {
             string sceneToLoad = data.sceneName;
+            Debug.Log($"[GAMEMANAGER] Save file found! Scene inside save file is: '{sceneToLoad}'");
 
-            // Ensure the saved scene name isn't blank, and don't let it load straight into Credits from the menu
             if (!string.IsNullOrEmpty(sceneToLoad) && sceneToLoad != creditsSceneName)
             {
                 SceneManager.sceneLoaded += ApplyLoadedDataOnSceneComplete;
                 SceneManager.LoadScene(sceneToLoad);
-            }
-            else
-            {
-                Debug.LogWarning($"[GAMEMANAGER] Save file contains invalid scene target: '{sceneToLoad}'. Aborting load transition.");
+                Debug.Log($"[GAMEMANAGER] Loading scene: {sceneToLoad}");
             }
         }
     }
 
-
-    /// <summary>
-    /// Executes automatically the precise frame the new level geometry becomes live.
-    /// </summary>
     private void ApplyLoadedDataOnSceneComplete(Scene scene, LoadSceneMode mode)
     {
-        // Unsubscribe immediately so it doesn't loop on future transitions
         SceneManager.sceneLoaded -= ApplyLoadedDataOnSceneComplete;
 
-        Debug.Log($"Loaded into {scene.name}. Dynamically binding references and executing loads...");
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        // Re-find references in the freshly loaded scene to avoid null references
+        Debug.Log($"[GAMEMANAGER] Scene {scene.name} is now live. Initializing asset injections...");
+
         playerObject = GameObject.FindWithTag("Player");
         enemies = GameObject.FindGameObjectsWithTag("Enemy");
 
-        // Fire the load data applications safely
-        if (playerObject != null)
-        {
-            LoadPlayer();
-        }
-
-        if (enemies != null && enemies.Length > 0)
-        {
-            LoadEnemies();
-        }
+        if (playerObject != null) LoadPlayer();
+        if (enemies != null && enemies.Length > 0) LoadEnemies();
     }
 
-    // =================================================================
-    // --- SYSTEM INTEGRATION METHODS FOR SCENE TRANSITIONS ---
-    // =================================================================
-
-    /// <summary>
-    /// Scans the level's assigned enemies. If none are alive, triggers the scene transition.
-    /// </summary>
     public void CheckLevelStatus()
     {
         int aliveEnemies = 0;
-
-        foreach (var enemy in enemies)
+        if (enemies != null)
         {
-            if (enemy != null)
+            foreach (var enemy in enemies)
             {
-                HealthHandler healthScript = enemy.GetComponent<HealthHandler>();
-
-                if (enemy.activeSelf && healthScript != null && healthScript.GetHealth() > 0)
+                if (enemy != null)
                 {
-                    aliveEnemies++;
+                    HealthHandler healthScript = enemy.GetComponent<HealthHandler>();
+                    if (enemy.activeSelf && healthScript != null && healthScript.GetHealth() > 0)
+                    {
+                        aliveEnemies++;
+                    }
                 }
             }
         }
 
-        // Section A Requirement: Level clears by killing the single target enemy
         if (aliveEnemies == 0)
         {
             HandleSceneTransition();
         }
     }
 
-    /// <summary>
-    /// Saves all game progress data and automatically moves the player to the next scene.
-    /// </summary>
     private void HandleSceneTransition()
     {
-        // Section C Requirement: "Saving should occur when transitioning between scenes"
         SavePlayer();
         SaveEnemies();
 
         string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene == level1Name)
-        {
-            SceneManager.LoadScene(level2Name);
-        }
+        if (currentScene == level1Name) SceneManager.LoadScene(level2Name);
         else if (currentScene == level2Name)
         {
-            // Section C requirement: "The save file must be deleted once the vertical slice is completed."
-            // We call a deletion file sweep right before moving into the credits.
             DeleteSaveFiles();
             SceneManager.LoadScene(creditsSceneName);
         }
-        else
-        {
-            Debug.LogWarning($"Scene transition triggered from unrecognized scene: {currentScene}");
-        }
     }
 
-    /// <summary>
-    /// Cleans up save data files upon completing the vertical slice assignment requirements.
-    /// </summary>
     private void DeleteSaveFiles()
     {
         try
         {
-            // We assume SaveSystem has a method or you can use standard System.IO file deletions
-            string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "player.json"); // Change file name if different
-            string enemySavePath = System.IO.Path.Combine(Application.persistentDataPath, "enemy.json");
+            // FIXED: Wipes matching binary save files upon assignment completion
+            string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
+            string enemySavePath = System.IO.Path.Combine(Application.persistentDataPath, "EnemyData.dat");
 
             if (System.IO.File.Exists(playerSavePath)) System.IO.File.Delete(playerSavePath);
             if (System.IO.File.Exists(enemySavePath)) System.IO.File.Delete(enemySavePath);
-
-            Debug.Log("Vertical slice complete: Save data wiped successfully.");
+            Debug.Log("[GAMEMANAGER] Vertical slice cleared: Saves deleted.");
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error cleaning up vertical slice save tracks: {e.Message}");
+            Debug.LogError($"Error cleaning up saves: {e.Message}");
         }
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= HandleGlobalSceneSetup;
     }
 }
