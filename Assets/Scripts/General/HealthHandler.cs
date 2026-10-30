@@ -43,7 +43,11 @@ public class HealthHandler : MonoBehaviour
     #endregion
     void Start()
     {
-        health = healthMax;
+        // FIX: Only set health to maximum if it hasn't been loaded/modified yet!
+        if (health <= 0 || health == healthMax)
+        {
+            health = healthMax;
+        }
 
         if (healthSlider == null)
         {
@@ -67,6 +71,7 @@ public class HealthHandler : MonoBehaviour
 
         UpdateHealthBarUI();
     }
+
 
     void Update()
     {

@@ -171,9 +171,28 @@ public class GameManager : MonoBehaviour
         playerObject = GameObject.FindWithTag("Player");
         enemies = GameObject.FindGameObjectsWithTag("Enemy");
 
-        if (playerObject != null) LoadPlayer();
-        if (enemies != null && enemies.Length > 0) LoadEnemies();
+        if (playerObject != null)
+        {
+            LoadPlayer();
+
+            // --- FIX: Force UI Manager updates if it exists in the level ---
+            // This grabs the active UIManager script in your scene and tells it to refresh the health slider and text displays
+            object uiMgr = GameObject.FindAnyObjectByType(Type.GetType("UIManager"));
+            if (uiMgr != null)
+            {
+                // Forces your UI system to manually poll current stats from health and weapon scripts
+                uiMgr.GetType().GetMethod("UpdateUI")?.Invoke(uiMgr, null);
+                uiMgr.GetType().GetMethod("UpdateHUD")?.Invoke(uiMgr, null);
+                Debug.Log("[GAMEMANAGER] Successfully requested HUD interface refresh from UI Manager assets.");
+            }
+        }
+
+        if (enemies != null && enemies.Length > 0)
+        {
+            LoadEnemies();
+        }
     }
+
 
     public void CheckLevelStatus()
     {
