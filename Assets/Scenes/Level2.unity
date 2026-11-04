@@ -616,9 +616,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
+      propertyPath: health
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
+      propertyPath: healthMax
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
       propertyPath: healthSlider
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 590446028}
     - target: {fileID: 4186357722349659567, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
       propertyPath: m_Name
       value: Player

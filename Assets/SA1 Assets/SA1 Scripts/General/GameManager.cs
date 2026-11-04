@@ -14,6 +14,9 @@ public class GameManager : MonoBehaviour
     public string level2Name = "Level2";
     public string creditsSceneName = "Credits";
 
+    // Tracks if we are loading fresh from the Main Menu file or transitioning between stages
+    private bool isMenuLoad = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -37,6 +40,37 @@ public class GameManager : MonoBehaviour
             playerObject = GameObject.FindWithTag("Player");
             enemies = GameObject.FindGameObjectsWithTag("Enemy");
             Debug.Log($"[GAMEMANAGER] References gathered. Player found: {playerObject != null}, Enemies found: {enemies?.Length}");
+
+            // --- CRITICAL FIX: Transfer stats during a natural level transition without breaking spawns ---
+            if (!isMenuLoad)
+            {
+                string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
+                if (System.IO.File.Exists(playerSavePath))
+                {
+                    PlayerData data = SaveSystem.LoadPlayer();
+                    if (data != null && playerObject != null)
+                    {
+                        // Restore health and ammunition metrics safely
+                        playerObject.GetComponent<ShootHandler>().SetCurrentAmmo(data.currentAmmo);
+                        playerObject.GetComponent<ShootHandler>().SetTotalAmmo(data.totalAmmo);
+                        playerObject.GetComponent<HealthHandler>().SetHealth(data.health);
+
+                        Debug.Log("[GAMEMANAGER] Level transition successful: Restored Player Health and Ammo. Spawn coordinates preserved.");
+                    }
+                }
+            }
+
+            // Reset menu load safety switch for subsequent gameplay transitions
+            isMenuLoad = false;
+
+            // --- Force UI Interface Refresh ---
+            object uiMgr = GameObject.FindAnyObjectByType(Type.GetType("UIManager"));
+            if (uiMgr != null)
+            {
+                uiMgr.GetType().GetMethod("UpdateUI")?.Invoke(uiMgr, null);
+                uiMgr.GetType().GetMethod("UpdateHUD")?.Invoke(uiMgr, null);
+                Debug.Log("[GAMEMANAGER] Triggered post-load canvas redraw via UIManager assets.");
+            }
 
             // Auto-bind Main Menu / Exit Button inside gameplay levels
             GameObject pauseMenuBtnObj = GameObject.Find("MainMenuBtn");
@@ -103,7 +137,7 @@ public class GameManager : MonoBehaviour
             playerObject.GetComponent<ShootHandler>().SetTotalAmmo(data.totalAmmo);
             playerObject.GetComponent<HealthHandler>().SetHealth(data.health);
 
-            // Restored full position array index pointers safely
+            // Restored full position array index pointers safely (Only triggered during Main Menu saves)
             playerObject.transform.position = new Vector3(data.position[0], data.position[1], data.position[2]);
             Debug.Log("[GAMEMANAGER] Player stats and position successfully applied.");
         }
@@ -133,7 +167,6 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[GAMEMANAGER] Load button was physically clicked!");
 
-        // FIXED: Now looking for the correct binary file path matching your SaveSystem!
         string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
         Debug.Log($"[GAMEMANAGER] Looking for save file at: {playerSavePath}");
 
@@ -151,9 +184,10 @@ public class GameManager : MonoBehaviour
 
             if (!string.IsNullOrEmpty(sceneToLoad) && sceneToLoad != creditsSceneName)
             {
+                isMenuLoad = true; // Signals that position parameters should be updated
                 SceneManager.sceneLoaded += ApplyLoadedDataOnSceneComplete;
                 SceneManager.LoadScene(sceneToLoad);
-                Debug.Log($"[GAMEMANAGER] Loading scene: {sceneToLoad}");
+                Debug.Log($"[GAMEMANAGER] Loading scene from save state: {sceneToLoad}");
             }
         }
     }
@@ -174,17 +208,6 @@ public class GameManager : MonoBehaviour
         if (playerObject != null)
         {
             LoadPlayer();
-
-            // --- FIX: Force UI Manager updates if it exists in the level ---
-            // This grabs the active UIManager script in your scene and tells it to refresh the health slider and text displays
-            object uiMgr = GameObject.FindAnyObjectByType(Type.GetType("UIManager"));
-            if (uiMgr != null)
-            {
-                // Forces your UI system to manually poll current stats from health and weapon scripts
-                uiMgr.GetType().GetMethod("UpdateUI")?.Invoke(uiMgr, null);
-                uiMgr.GetType().GetMethod("UpdateHUD")?.Invoke(uiMgr, null);
-                Debug.Log("[GAMEMANAGER] Successfully requested HUD interface refresh from UI Manager assets.");
-            }
         }
 
         if (enemies != null && enemies.Length > 0)
@@ -192,7 +215,6 @@ public class GameManager : MonoBehaviour
             LoadEnemies();
         }
     }
-
 
     public void CheckLevelStatus()
     {
@@ -225,7 +247,10 @@ public class GameManager : MonoBehaviour
 
         string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene == level1Name) SceneManager.LoadScene(level2Name);
+        if (currentScene == level1Name)
+        {
+            SceneManager.LoadScene(level2Name);
+        }
         else if (currentScene == level2Name)
         {
             DeleteSaveFiles();
@@ -237,7 +262,7 @@ public class GameManager : MonoBehaviour
     {
         try
         {
-            // FIXED: Wipes matching binary save files upon assignment completion
+            // Wipes binary data clean upon level index expansion completion
             string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
             string enemySavePath = System.IO.Path.Combine(Application.persistentDataPath, "EnemyData.dat");
 
@@ -250,7 +275,6 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"Error cleaning up saves: {e.Message}");
         }
     }
-
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= HandleGlobalSceneSetup;

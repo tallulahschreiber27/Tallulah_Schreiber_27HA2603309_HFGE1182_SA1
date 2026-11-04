@@ -10150,7 +10150,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
       propertyPath: health
-      value: 60
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
+      propertyPath: healthMax
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 3832600812827014743, guid: de4773209c49fae40a4e13e322989e6a, type: 3}
       propertyPath: healthSlider
