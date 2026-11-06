@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 5282697914331091614}
   - component: {fileID: 6854015041284258062}
   - component: {fileID: 1898650567476154198}
+  - component: {fileID: -1348961745607395923}
   m_Layer: 0
   m_Name: Arrow
   m_TagString: Arrow
@@ -527,3 +528,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 20
+--- !u!114 &-1348961745607395923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2690538946354341380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 884937b951f091f4ab89fb67836ccecd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  duration: 1
+  particlePrefab: {fileID: 6065276101749598976, guid: 1bf404d83e3a9b140a9bb6a718e8193b, type: 3}
+  spawnPoint: {fileID: 1473483528314592692}
