@@ -33,6 +33,12 @@ public class HealthHandler : MonoBehaviour
     [SerializeField] private bool destroyOnDeath = true;
     [SerializeField] private float destroyOnDeathDelay = 0f;
 
+    [Header("PLAYER VISUAL FEEDBACK (SA1 CUSTOM)")]
+    [Tooltip("ONLY FOR THE PLAYER: Drag your Red Damage Flash UI Image here!")]
+    [SerializeField] private UnityEngine.UI.Image damageFlashImage;
+    [SerializeField] private float flashDuration = 0.2f;
+    [SerializeField] private Color flashColor = new Color(1f, 0f, 0f, 0.4f); // Red with 40% transparency
+
     private bool isDead = false;
 
     #region BostonCity Campus
@@ -43,7 +49,6 @@ public class HealthHandler : MonoBehaviour
     #endregion
     void Start()
     {
-        // FIX: Only set health to maximum if it hasn't been loaded/modified yet!
         if (health <= 0 || health == healthMax)
         {
             health = healthMax;
@@ -72,7 +77,6 @@ public class HealthHandler : MonoBehaviour
         UpdateHealthBarUI();
     }
 
-
     void Update()
     {
         if (isDead) return;
@@ -85,6 +89,12 @@ public class HealthHandler : MonoBehaviour
                 DamageHandler(decayDamage);
                 decayTimer = 0f;
             }
+        }
+
+        // SMOOTHLY FADE OUT THE RED DAMAGE FLASH OVER TIME
+        if (gameObject.CompareTag("Player") && damageFlashImage != null && damageFlashImage.color.a > 0)
+        {
+            damageFlashImage.color = Color.Lerp(damageFlashImage.color, Color.clear, flashDuration * Time.deltaTime * 10f);
         }
     }
 
@@ -156,6 +166,12 @@ public class HealthHandler : MonoBehaviour
             }
         }
 
+        // --- VISUAL FEEDBACK: PLAYER FLASHES RED SCREEN ---
+        if (gameObject.CompareTag("Player") && damageFlashImage != null && health > 0)
+        {
+            damageFlashImage.color = flashColor;
+        }
+
         if (health <= 0)
         {
             DeathHandler();
@@ -198,8 +214,19 @@ public class HealthHandler : MonoBehaviour
             }
         }
 
-        // CONNECTED TO GAMEMANAGER TRANSITIONS 
-        // Check if this specific dead object is tagged as an Enemy, then alert the GameManager
+        // --- GAME OVER UI SYSTEM TRIPPED ---
+        if (gameObject.CompareTag("Player"))
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.TriggerGameOver();
+            }
+            else
+            {
+                Debug.LogError("[HEALTH HANDLER] Critical: UIManager instance missing from scene hierarchy!");
+            }
+        }
+
         if (gameObject.CompareTag("Enemy") && GameManager.Instance != null)
         {
             GameManager.Instance.CheckLevelStatus();
@@ -208,24 +235,36 @@ public class HealthHandler : MonoBehaviour
         AnimalAI aiScript = GetComponent<AnimalAI>();
         if (aiScript != null) aiScript.Die();
 
-        if (canvasTransform != null)
+        // FIX: Prevent deleting the player's main UI canvas!
+        if (canvasTransform != null && !gameObject.CompareTag("Player"))
         {
             Destroy(canvasTransform.gameObject);
         }
 
         if (destroyOnDeath)
         {
-            Destroy(gameObject, destroyOnDeathDelay);
+            // For the player, disable components instead of destroying the GameObject entirely
+            if (gameObject.CompareTag("Player"))
+            {
+                var controller = GetComponent<CharacterController>();
+                if (controller != null) controller.enabled = false;
+
+                // Disable player visual rendering if necessary, but keep the object alive for the camera!
+            }
+            else
+            {
+                Destroy(gameObject, destroyOnDeathDelay);
+            }
         }
         else
         {
-            gameObject.SetActive(false);
+            if (!gameObject.CompareTag("Player"))
+            {
+                gameObject.SetActive(false);
+            }
         }
     }
 
-    // =================================================================
-    // --- REQUIRED METHODS FOR INTEGRATION MANAGERS AND SAVES ---
-    // =================================================================
 
     public float GetMaxHealth()
     {
