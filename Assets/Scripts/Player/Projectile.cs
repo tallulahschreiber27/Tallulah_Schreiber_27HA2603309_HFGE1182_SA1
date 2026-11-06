@@ -10,22 +10,44 @@ public class Projectile : MonoBehaviour
         switch (col.gameObject.tag)
         {
             case "Player":
-                col.gameObject.GetComponent<ShootHandler>().AddAmmo(1);
-                Destroy(gameObject);
+                ShootHandler shoot = col.gameObject.GetComponent<ShootHandler>();
+                if (shoot != null)
+                {
+                    int readyArrows = shoot.GetCurrentAmmo();
+                    int reserveArrows = shoot.GetTotalAmmo();
+                    int combinedTotal = readyArrows + reserveArrows;
+
+                    // DEBUG LOG: Tracking exact inventory values on touch
+                    Debug.Log($"[ARROW DEBUG] Touched Player! Ready: {readyArrows} | Reserves: {reserveArrows} | Combined: {combinedTotal} (Need < 10 to pick up)");
+
+                    if (combinedTotal < 10)
+                    {
+                        Debug.Log("[ARROW DEBUG] Space available! Consuming arrow item.");
+                        shoot.AddAmmo(1);
+                        Destroy(gameObject);
+                    }
+                    else
+                    {
+                        Debug.Log("[ARROW DEBUG] Condition FAILED: Inventory is entirely full. Leaving on ground.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("[ARROW DEBUG] CRITICAL: Touched an object tagged 'Player', but no ShootHandler component was found on it!");
+                }
                 break;
+
             case "Enemy":
-                // 1. Find the SpawnParticleEvent component on this arrow and trigger it!
                 if (GetComponent<SpawnParticleEvent>() != null)
                 {
                     GetComponent<SpawnParticleEvent>().SpawnParticle();
                 }
 
-                // 2. Original damage and cleanup logic
                 col.gameObject.GetComponent<HealthHandler>().DamageHandler("Arrow", damage);
                 Destroy(gameObject);
                 break;
+
             case "NPC":
-                // Optional: You can trigger particles here too if you want NPC feedback!
                 if (GetComponent<SpawnParticleEvent>() != null)
                 {
                     GetComponent<SpawnParticleEvent>().SpawnParticle();
@@ -34,10 +56,12 @@ public class Projectile : MonoBehaviour
                 col.gameObject.GetComponent<HealthHandler>().DamageHandler("Arrow", damage);
                 Destroy(gameObject);
                 break;
+
             case "Crate":
                 col.gameObject.GetComponent<HealthHandler>().DamageHandler("Arrow", damage);
                 Destroy(gameObject);
                 break;
+
             default:
                 break;
         }

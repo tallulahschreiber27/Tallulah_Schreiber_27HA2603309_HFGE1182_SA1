@@ -144,7 +144,9 @@ public class ShootHandler : MonoBehaviour
         {
             if (bowIsReady)
             {
-                ammoText.text = $"ARROWS: {currentAmmo}";
+                // FIX: Match the UIManager formatting exactly to stop the flickering!
+                int totalCombinedArrows = currentAmmo + totalAmmo;
+                ammoText.text = $"{totalCombinedArrows} / 10";
             }
             else
             {
@@ -152,6 +154,7 @@ public class ShootHandler : MonoBehaviour
             }
         }
     }
+
 
     public void ChargeShot()
     {
@@ -244,17 +247,26 @@ public class ShootHandler : MonoBehaviour
 
     public void AddAmmo(int amount)
     {
-        if (totalAmmo >= maxReserveAmmo) return;
+        // SA1 Rule: Cap total maximum arrows on person to exactly 10
+        int absoluteMaxArrows = 10;
+        int combinedCurrentCount = currentAmmo + totalAmmo;
 
-        totalAmmo += amount;
-
-        if (totalAmmo > maxReserveAmmo)
+        // 1. BLOCK PICKUP: If we already have 10 or more arrows total, turn away!
+        if (combinedCurrentCount >= absoluteMaxArrows)
         {
-            totalAmmo = maxReserveAmmo;
+            Debug.Log("[PICKUP BLOCKED] Your quiver and bow are completely full of arrows!");
+            return;
         }
 
-        Debug.Log($"[AMMO PICKUP] Gathered arrows. Total Reserves: {totalAmmo}");
+        // 2. Add the ammo to reserves, but cap it so combined total never crosses 10
+        int spaceLeft = absoluteMaxArrows - combinedCurrentCount;
+        int amountToAdd = Mathf.Min(amount, spaceLeft);
 
+        totalAmmo += amountToAdd;
+
+        Debug.Log($"[AMMO PICKUP] Gathered arrows. Total Reserves: {totalAmmo} | Combined Total: {currentAmmo + totalAmmo}");
+
+        // 3. Keep your lecturer's auto-draw logic safe
         if (currentAmmo <= 0)
         {
             Debug.Log("[AUTO-RELOAD] Active weapon empty! Automatically drawing bow from new pickup items.");
@@ -263,6 +275,11 @@ public class ShootHandler : MonoBehaviour
         else
         {
             CheckWeaponAndUIState();
+            // Force your main canvas display numbers to match the reload instantly
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateAmmoUI();
+            }
         }
     }
 

@@ -83,8 +83,12 @@ public class UIManager : MonoBehaviour
         if (shootHandler == null || txtAmmo == null)
             return;
 
-        txtAmmo.text = $"{shootHandler.GetCurrentAmmo()} / {shootHandler.GetTotalAmmo()}";
+        // Combine both numbers together so it looks like: "ARROWS: 10 / 10" or just "10"
+        int totalCombinedArrows = shootHandler.GetCurrentAmmo() + shootHandler.GetTotalAmmo();
+
+        txtAmmo.text = $"{totalCombinedArrows} / 10";
     }
+
 
     public void PauseGame()
     {

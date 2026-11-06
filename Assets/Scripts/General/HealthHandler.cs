@@ -121,6 +121,9 @@ public class HealthHandler : MonoBehaviour
 
     public void DamageHandler(string damageTag, float damageAmount)
     {
+        // DEBUG LOG 1: Tracking incoming hits
+        Debug.Log($"[DEBUG] DamageHandler reached on {gameObject.name}. Tag: {damageTag}, Amount: {damageAmount}, isDead status: {isDead}");
+
         if (isDead) return;
 
         if (damageTag == "Arrow" || damageTag == "Enemy" || (damageTags != null && damageTags.Contains(damageTag)))
@@ -135,6 +138,9 @@ public class HealthHandler : MonoBehaviour
 
     public void DamageHandler(float damageAmount)
     {
+        // DEBUG LOG 2: Tracking environment/untagged damage
+        Debug.Log($"[DEBUG] Tagless DamageHandler reached on {gameObject.name}. Amount: {damageAmount}, isDead status: {isDead}");
+
         if (isDead) return;
 
         ApplyDamage(damageAmount);
@@ -142,6 +148,7 @@ public class HealthHandler : MonoBehaviour
 
     private void ApplyDamage(float amount)
     {
+        float startingHealth = health;
         if (amount <= health)
         {
             health -= amount;
@@ -150,6 +157,9 @@ public class HealthHandler : MonoBehaviour
         {
             health = 0;
         }
+
+        // DEBUG LOG 3: Verifying structural subtraction
+        Debug.Log($"[DEBUG] ApplyDamage completed on {gameObject.name}. Health went from {startingHealth} to {health}");
 
         UpdateHealthBarUI();
 
