@@ -1031,6 +1031,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hud: {fileID: 0}
   pauseMenu: {fileID: 0}
+  gameOverPanel: {fileID: 0}
   txtAmmo: {fileID: 0}
   shootHandler: {fileID: 0}
   sldHealth: {fileID: 0}
@@ -1160,6 +1161,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerObject: {fileID: 0}
   enemies: []
+  mainMenuName: MainMenu
   level1Name: Level1
   level2Name: Level2
   creditsSceneName: Credits
