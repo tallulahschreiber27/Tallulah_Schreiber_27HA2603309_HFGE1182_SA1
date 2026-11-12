@@ -149,9 +149,7 @@ public class PlayerController : MonoBehaviour
         MoveHandler();
     }
 
-    /// <summary>
-    /// Reads coordinates and handles stance booleans, keeping your 2D Locomotion Blend tree synced.
-    /// </summary>
+    
     private void UpdateAnimatorParameters()
     {
         if (anim == null) return;
@@ -329,9 +327,7 @@ public class PlayerController : MonoBehaviour
         float dynamicCheckDistance = (groundCheckDistance + 0.1f) * currentScaleY;
         isGrounded = Physics.Raycast(start, Vector3.down, dynamicCheckDistance, groundLayer);
     }
-    // =========================================================
-    // MOBILE UI BUTTON METHODS (Your Shoot button stays untouched!)
-    // =========================================================
+    //mobile UI buttons
     public void MobileJump()
     {
         if (isGrounded)

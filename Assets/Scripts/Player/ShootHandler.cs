@@ -70,7 +70,6 @@ public class ShootHandler : MonoBehaviour
 
     private void Update()
     {
-        // MASTER LOCK 1: If game clock is frozen or UIManager states it's paused, freeze all combat inputs instantly
         if (Time.timeScale == 0f || (UIManager.Instance != null && UIManager.Instance.IsPaused))
         {
             if (isCharging)
@@ -78,10 +77,9 @@ public class ShootHandler : MonoBehaviour
                 isCharging = false;
                 chargeTime = 0f;
             }
-            return; // Aborts the update cycle entirely before checking hardware mouse states
+            return; 
         }
 
-        // MASTER LOCK 2: Safety Gate for active UI element hover clicking
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             if (isCharging)
@@ -144,7 +142,7 @@ public class ShootHandler : MonoBehaviour
         {
             if (bowIsReady)
             {
-                // FIX: Match the UIManager formatting exactly to stop the flickering!
+                // Stops previous flickering bug encountered
                 int totalCombinedArrows = currentAmmo + totalAmmo;
                 ammoText.text = $"{totalCombinedArrows} / 10";
             }
@@ -183,7 +181,7 @@ public class ShootHandler : MonoBehaviour
         currentAmmo--;
         CheckWeaponAndUIState();
 
-        // --- SECTION B: AUDIO FEEDBACK FOR SHOOTING ---
+        // Audio feedback for shooting
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.Play("shoot");
@@ -234,7 +232,7 @@ public class ShootHandler : MonoBehaviour
             totalAmmo = 0;
         }
 
-        // --- SECTION B: AUDIO FEEDBACK FOR BOW RELOAD/RESET ---
+        // Section B audio for reload and hit from bow
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.Play("hit"); // Triggers mechanical reload sound click
@@ -251,14 +249,14 @@ public class ShootHandler : MonoBehaviour
         int absoluteMaxArrows = 10;
         int combinedCurrentCount = currentAmmo + totalAmmo;
 
-        // 1. BLOCK PICKUP: If we already have 10 or more arrows total, turn away!
+        //  BLOCK PICKUP: If you already have 10 or more arrows total, turn away!
         if (combinedCurrentCount >= absoluteMaxArrows)
         {
             Debug.Log("[PICKUP BLOCKED] Your quiver and bow are completely full of arrows!");
             return;
         }
 
-        // 2. Add the ammo to reserves, but cap it so combined total never crosses 10
+        // Add the ammo to reserves, but cap it so combined total never crosses 10
         int spaceLeft = absoluteMaxArrows - combinedCurrentCount;
         int amountToAdd = Mathf.Min(amount, spaceLeft);
 
@@ -266,7 +264,6 @@ public class ShootHandler : MonoBehaviour
 
         Debug.Log($"[AMMO PICKUP] Gathered arrows. Total Reserves: {totalAmmo} | Combined Total: {currentAmmo + totalAmmo}");
 
-        // 3. Keep your lecturer's auto-draw logic safe
         if (currentAmmo <= 0)
         {
             Debug.Log("[AUTO-RELOAD] Active weapon empty! Automatically drawing bow from new pickup items.");
@@ -275,7 +272,7 @@ public class ShootHandler : MonoBehaviour
         else
         {
             CheckWeaponAndUIState();
-            // Force your main canvas display numbers to match the reload instantly
+            // Updates UI instantly
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.UpdateAmmoUI();
@@ -289,10 +286,6 @@ public class ShootHandler : MonoBehaviour
         float targetFOV = isZooming ? zoomCamFOV : defaultCamFOV;
         cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, Time.deltaTime * 10f);
     }
-
-    // =================================================================
-    // --- INTEGRATION INTERFACE DATA GETTERS AND SETTERS ---
-    // =================================================================
 
     public int GetCurrentAmmo() { return currentAmmo; }
     public int GetTotalAmmo() { return totalAmmo; }
@@ -331,7 +324,7 @@ public class ShootHandler : MonoBehaviour
                 {
                     targetHealth.DamageHandler(punchDamage);
 
-                    // --- SECTION B: AUDIO FEEDBACK FOR HIT ---
+                    // Section B hit audio 
                     if (SoundManager.Instance != null)
                     {
                         SoundManager.Instance.Play("hit");

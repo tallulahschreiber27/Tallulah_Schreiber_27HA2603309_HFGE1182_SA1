@@ -163,7 +163,7 @@ public class HealthHandler : MonoBehaviour
 
         UpdateHealthBarUI();
 
-        // --- AUDIO FEEDBACK: DAMAGE TAKEN ---
+        // Audio: damage taken
         if (SoundManager.Instance != null && health > 0)
         {
             if (gameObject.CompareTag("Player"))
@@ -176,7 +176,7 @@ public class HealthHandler : MonoBehaviour
             }
         }
 
-        // --- VISUAL FEEDBACK: PLAYER FLASHES RED SCREEN ---
+        // Player gets red flash screen for damage
         if (gameObject.CompareTag("Player") && damageFlashImage != null && health > 0)
         {
             damageFlashImage.color = flashColor;
@@ -211,7 +211,7 @@ public class HealthHandler : MonoBehaviour
 
         Debug.Log($"[{gameObject.name}] has died.");
 
-        // --- AUDIO FEEDBACK: CHARACTER DEATH ---
+        // Audio for character death
         if (SoundManager.Instance != null)
         {
             if (gameObject.CompareTag("Player"))
@@ -224,7 +224,7 @@ public class HealthHandler : MonoBehaviour
             }
         }
 
-        // --- GAME OVER UI SYSTEM TRIPPED ---
+        // Game Over system panel
         if (gameObject.CompareTag("Player"))
         {
             if (UIManager.Instance != null)
@@ -245,7 +245,7 @@ public class HealthHandler : MonoBehaviour
         AnimalAI aiScript = GetComponent<AnimalAI>();
         if (aiScript != null) aiScript.Die();
 
-        // FIX: Prevent deleting the player's main UI canvas!
+        // Prevent deleting the player's main UI canvas upon death
         if (canvasTransform != null && !gameObject.CompareTag("Player"))
         {
             Destroy(canvasTransform.gameObject);

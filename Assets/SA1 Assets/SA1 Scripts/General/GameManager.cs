@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     public string level2Name = "Level2";
     public string creditsSceneName = "Credits";
 
-    // Tracks if we are loading fresh from the Main Menu file or transitioning between stages
+    // Tracks if you are loading fresh from the Main Menu file or transitioning between stages
     private bool isMenuLoad = false;
 
     private void Awake()
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
             enemies = GameObject.FindGameObjectsWithTag("Enemy");
             Debug.Log($"[GAMEMANAGER] References gathered. Player found: {playerObject != null}, Enemies found: {enemies?.Length}");
 
-            // --- CRITICAL FIX: Transfer stats during a natural level transition without breaking spawns ---
+            //CRITICAL FIX: Transfer stats during a natural level transition without breaking spawns 
             if (!isMenuLoad)
             {
                 string playerSavePath = System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.dat");
@@ -63,7 +63,7 @@ public class GameManager : MonoBehaviour
             // Reset menu load safety switch for subsequent gameplay transitions
             isMenuLoad = false;
 
-            // --- Force UI Interface Refresh ---
+            //  Force UI Interface Refresh 
             object uiMgr = GameObject.FindAnyObjectByType(Type.GetType("UIManager"));
             if (uiMgr != null)
             {

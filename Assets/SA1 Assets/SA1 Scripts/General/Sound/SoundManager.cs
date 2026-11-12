@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SoundManager : MonoBehaviour
 {
-    // Static instance allows other scripts to access this easily
+    
     public static SoundManager Instance { get; private set; }
 
     [Header("--- Audio Sources ---")]
@@ -51,7 +51,7 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    // Call this to change or start background music
+    // Changes or starts BG music
     public void PlayMusic(AudioClip clip)
     {
         if (clip != null)
@@ -62,7 +62,7 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    // Main text-string play handler to cleanly match your other script calls
+    // Main text-string play handler to cleanly match the other script calls
     public void Play(string name)
     {
         switch (name.ToLower())

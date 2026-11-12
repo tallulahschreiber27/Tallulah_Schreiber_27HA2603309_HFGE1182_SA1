@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour
     [Header("MENUS & PANELS")]
     public GameObject hud;
     public GameObject pauseMenu;
-    public GameObject gameOverPanel; // SA1 Custom: Slot for your Game Over Panel!
+    public GameObject gameOverPanel; 
 
     [Header("SHOOT INTEGRATION")]
     public TextMeshProUGUI txtAmmo;
@@ -120,13 +120,7 @@ public class UIManager : MonoBehaviour
         Cursor.visible = false;
     }
 
-    // =================================================================
-    // --- SA1 CUSTOM: GAME OVER PANEL CONTROL METHODS ---
-    // =================================================================
-
-    /// <summary>
-    /// Call this from HealthHandler when the player dies to pop open the Game Over menu!
-    /// </summary>
+    //Game over panel methods
     public void TriggerGameOver()
     {
         Time.timeScale = 0f; // Freeze game physics
@@ -141,17 +135,15 @@ public class UIManager : MonoBehaviour
         Cursor.visible = true;
     }
 
-    /// <summary>
-    /// Attach this method directly to your Game Over panel's "Load Last Save" Button OnClick event!
-    /// </summary>
+    //Loads last save after a game over
     public void HandleGameOverLoadPressed()
     {
-        Time.timeScale = 1f; // Unfreeze time scale before loading!
+        Time.timeScale = 1f; 
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
 
-        // Uses your lecturer's exact custom loading procedure
+        //lecturer's exact custom loading procedure
         if (GameManager.Instance != null)
         {
             Debug.Log("[UI MANAGER] Game Over: Loading last valid player save sequence...");
@@ -163,10 +155,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // =================================================================
-    // --- NAVIGATION METHODS FOR PAUSE MENU & MAIN MENU ---
-    // =================================================================
-
+    //Methods for pause menu and main menu
     public void HandleLoadButtonPressed()
     {
         GameManager activeManager = FindObjectOfType<GameManager>();
